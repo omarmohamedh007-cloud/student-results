@@ -207,7 +207,8 @@
         let studentsData = [];
 
         window.onload = function() {
-            fetch('data.xlsx')
+            // إضافة رقم عشوائي لمنع الموبايل من تخزين الملف القديم
+            fetch('data.xlsx?nocache=' + new Date().getTime())
                 .then(response => {
                     if (!response.ok) throw new Error('لم يتم العثور على data.xlsx');
                     return response.arrayBuffer();
@@ -243,7 +244,6 @@
                 return;
             }
 
-            // البحث بأول عمود في الإكسيل (الكود)
             let student = studentsData.find(s => {
                 let firstVal = Object.values(s)[0];
                 return String(firstVal).trim() === codeInput;
