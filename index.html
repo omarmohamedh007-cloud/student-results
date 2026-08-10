@@ -3,62 +3,235 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>منصة استعلام درجات الطلاب - مدرس في بيتك</title>
+    <title>مدرس في بيتك - الأستاذ محمد حامد</title>
     <!-- مكتبة قراءة ملفات الإكسيل -->
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7f6; padding: 20px; display: flex; flex-direction: column; align-items: center; }
-        .card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); width: 100%; max-width: 500px; margin-bottom: 20px; text-align: center; }
-        h2 { color: #2c3e50; margin-bottom: 15px; }
-        input, button { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; font-size: 16px; }
-        button { background-color: #27ae60; color: white; border: none; cursor: pointer; font-weight: bold; }
-        button:hover { background-color: #219150; }
-        .result-box { margin-top: 15px; padding: 15px; background-color: #e8f8f5; border-radius: 6px; display: none; text-align: right; }
-        .result-item { padding: 8px 0; border-bottom: 1px solid #d1d1d1; font-size: 16px; }
-        .result-item b { color: #2c3e50; }
-        .status-msg { font-size: 13px; color: #7f8c8d; margin-top: 5px; }
+        :root {
+            --primary-color: #0f172a;
+            --accent-color: #2563eb;
+            --success-color: #10b981;
+            --bg-color: #f8fafc;
+            --card-bg: #ffffff;
+            --text-main: #1e293b;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            margin: 0;
+            padding: 20px 15px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        .header h1 {
+            color: var(--accent-color);
+            margin: 0;
+            font-size: 28px;
+            font-weight: 800;
+        }
+
+        .header h2 {
+            color: var(--primary-color);
+            margin: 5px 0 0 0;
+            font-size: 18px;
+            font-weight: 600;
+            opacity: 0.85;
+        }
+
+        .card {
+            background: var(--card-bg);
+            padding: 25px;
+            border-radius: 16px;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.01);
+            width: 100%;
+            max-width: 450px;
+            box-sizing: border-box;
+            border: 1px solid #e2e8f0;
+        }
+
+        .search-title {
+            color: var(--primary-color);
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .input-group {
+            position: relative;
+            margin-bottom: 12px;
+        }
+
+        input {
+            width: 100%;
+            padding: 14px 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            box-sizing: border-box;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            outline: none;
+            text-align: center;
+            font-weight: 600;
+        }
+
+        input:focus {
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+        }
+
+        button {
+            width: 100%;
+            padding: 14px;
+            background-color: var(--accent-color);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: background 0.3s ease, transform 0.1s ease;
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
+        }
+
+        button:hover {
+            background-color: #1d4ed8;
+        }
+
+        button:active {
+            transform: scale(0.98);
+        }
+
+        .status-msg {
+            font-size: 13px;
+            margin-top: 10px;
+            text-align: center;
+            font-weight: 600;
+        }
+
+        .result-box {
+            margin-top: 20px;
+            display: none;
+            animation: fadeIn 0.4s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .result-header {
+            background: #eff6ff;
+            color: var(--accent-color);
+            padding: 12px;
+            border-radius: 8px;
+            font-weight: 700;
+            text-align: center;
+            margin-bottom: 12px;
+            border: 1px dashed #bfdbfe;
+        }
+
+        .data-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .data-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 14px;
+            background: #f8fafc;
+            border-radius: 8px;
+            border-right: 4px solid var(--accent-color);
+        }
+
+        .data-label {
+            font-weight: 700;
+            color: #475569;
+            font-size: 14px;
+        }
+
+        .data-value {
+            font-weight: 800;
+            color: var(--primary-color);
+            font-size: 15px;
+        }
+
+        .footer {
+            margin-top: 25px;
+            font-size: 12px;
+            color: #94a3b8;
+            text-align: center;
+        }
     </style>
 </head>
 <body>
 
-    <div class="card">
-        <h2>👨‍🎓 استعلام عن نتيجة الطالب</h2>
-        <input type="text" id="studentCode" placeholder="أدخل كود الطالب هنا...">
-        <button onclick="searchScore()">عرض النتيجة</button>
-        <div id="statusMsg" class="status-msg">جاري تحميل البيانات...</div>
+    <div class="header">
+        <h1>🏡 مدرس في بيتك</h1>
+        <h2>الأستاذ / محمد حامد</h2>
+    </div>
 
-        <div id="resultBox" class="result-box"></div>
+    <div class="card">
+        <div class="search-title">🎓 استعلام عن نتيجة الطالب</div>
+        
+        <div class="input-group">
+            <input type="text" id="studentCode" placeholder="أدخل كود الطالب هنا...">
+        </div>
+        
+        <button onclick="searchScore()">عرض النتيجة</button>
+        <div id="statusMsg" class="status-msg" style="color: #64748b;">جاري تحميل البيانات...</div>
+
+        <div id="resultBox" class="result-box">
+            <div class="result-header">✨ تفاصيل النتيجة والغياب ✨</div>
+            <div id="dataGrid" class="data-grid"></div>
+        </div>
+    </div>
+
+    <div class="footer">
+        جميع الحقوق محفوظة © منصة مدرس في بيتك
     </div>
 
     <script>
         let studentsData = [];
 
-        // جلب وقراءة ملف الإكسيل أوتوماتيكياً
         window.onload = function() {
             fetch('data.xlsx')
                 .then(response => {
-                    if (!response.ok) throw new Error('لم يتم العثور على ملف data.xlsx');
+                    if (!response.ok) throw new Error('لم يتم العثور على data.xlsx');
                     return response.arrayBuffer();
                 })
                 .then(buffer => {
                     let workbook = XLSX.read(buffer, { type: 'array' });
                     let firstSheetName = workbook.SheetNames[0];
                     let worksheet = workbook.Sheets[firstSheetName];
-                    studentsData = XLSX.utils.sheet_to_json(worksheet, { defval: "" });
+                    studentsData = XLSX.utils.sheet_to_json(worksheet, { defval: "-" });
                     
-                    document.getElementById('statusMsg').innerText = "✅ النظام جاهز للاستعلام.";
-                    document.getElementById('statusMsg').style.color = "green";
+                    document.getElementById('statusMsg').innerText = "✅ النظام جاهز للاستعلام";
+                    document.getElementById('statusMsg').style.color = "#10b981";
                 })
                 .catch(error => {
                     console.error(error);
                     document.getElementById('statusMsg').innerText = "⚠️ يرجى التأكد من رفع ملف data.xlsx";
-                    document.getElementById('statusMsg').style.color = "red";
+                    document.getElementById('statusMsg').style.color = "#ef4444";
                 });
         };
 
         function searchScore() {
             let codeInput = document.getElementById('studentCode').value.trim();
             let resultBox = document.getElementById('resultBox');
+            let dataGrid = document.getElementById('dataGrid');
 
             if (!codeInput) {
                 alert("برجاء كتابة الكود أولاً!");
@@ -66,25 +239,30 @@
             }
 
             if (studentsData.length === 0) {
-                alert("جاري تحميل ملف الدرجات، انتظر ثوانٍ أو تأكد من رفع data.xlsx");
+                alert("جاري تحميل بيانات الإكسيل، برجاء الانتظار ثوانٍ!");
                 return;
             }
 
-            // البحث بأول عمود في الإكسيل
+            // البحث بأول عمود في الإكسيل (الكود)
             let student = studentsData.find(s => {
                 let firstVal = Object.values(s)[0];
                 return String(firstVal).trim() === codeInput;
             });
 
             if (student) {
-                let html = "<h3 style='margin-top:0; color:#2c3e50;'>بيانات الطالب</h3>";
+                let html = "";
                 for (let key in student) {
-                    html += `<div class="result-item"><b>${key}:</b> ${student[key]}</div>`;
+                    html += `
+                        <div class="data-item">
+                            <span class="data-label">${key}</span>
+                            <span class="data-value">${student[key]}</span>
+                        </div>
+                    `;
                 }
-                resultBox.innerHTML = html;
+                dataGrid.innerHTML = html;
                 resultBox.style.display = 'block';
             } else {
-                alert("لم يتم العثور على طالب بهذا الكود! تأكد من صحة الرقم.");
+                alert("لم يتم العثور على طالب بهذا الكود! تأكد من الرقم.");
                 resultBox.style.display = 'none';
             }
         }
