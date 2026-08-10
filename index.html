@@ -3,19 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>منصة درجات الطلاب</title>
+    <title>منصة استعلام درجات الطلاب - مدرس في بيتك</title>
+    <!-- مكتبة قراءة ملفات الإكسيل -->
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-    
     <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7f6; padding: 20px; display: flex; flex-direction: column; align-items: center; }
         .card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); width: 100%; max-width: 500px; margin-bottom: 20px; text-align: center; }
+        h2 { color: #2c3e50; margin-bottom: 15px; }
         input, button { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; font-size: 16px; }
         button { background-color: #27ae60; color: white; border: none; cursor: pointer; font-weight: bold; }
-        .admin-btn { background-color: #2980b9; }
+        button:hover { background-color: #219150; }
         .result-box { margin-top: 15px; padding: 15px; background-color: #e8f8f5; border-radius: 6px; display: none; text-align: right; }
-        .result-item { padding: 5px 0; border-bottom: 1px solid #d1d1d1; }
+        .result-item { padding: 8px 0; border-bottom: 1px solid #d1d1d1; font-size: 16px; }
         .result-item b { color: #2c3e50; }
-        .admin-section { display: none; border-top: 2px dashed #ccc; padding-top: 15px; }
+        .status-msg { font-size: 13px; color: #7f8c8d; margin-top: 5px; }
     </style>
 </head>
 <body>
@@ -24,66 +25,66 @@
         <h2>👨‍🎓 استعلام عن نتيجة الطالب</h2>
         <input type="text" id="studentCode" placeholder="أدخل كود الطالب هنا...">
         <button onclick="searchScore()">عرض النتيجة</button>
+        <div id="statusMsg" class="status-msg">جاري تحميل البيانات...</div>
 
-        <div id="resultBox" class="result-box">
-            <!-- سيتم إضافة النتائج هنا تلقائياً -->
-        </div>
-    </div>
-
-    <div class="card">
-        <button class="admin-btn" onclick="toggleAdmin()">⚙️ لوحة تحكم المدرس</button>
-        <div id="adminPanel" class="admin-section">
-            <h3>رفع ملف الدرجات (Excel)</h3>
-            <input type="file" id="excelFile" accept=".xlsx, .xls">
-            <button onclick="uploadExcel()">رفع وتحديث الدرجات</button>
-            <p id="uploadStatus" style="color: green; font-weight: bold;"></p>
-        </div>
+        <div id="resultBox" class="result-box"></div>
     </div>
 
     <script>
-        const ADMIN_PASSWORD = "1234"; // يمكنك تغييرها من هنا
         let studentsData = [];
 
-        function toggleAdmin() {
-            let panel = document.getElementById('adminPanel');
-            if (panel.style.display === 'block') { panel.style.display = 'none'; return; }
-            let pass = prompt("برجاء إدخال كلمة سر المدرس:");
-            if (pass === ADMIN_PASSWORD) { panel.style.display = 'block'; }
-            else if (pass !== null) { alert("❌ كلمة السر غير صحيحة!"); }
-        }
-
-        function uploadExcel() {
-            let fileInput = document.getElementById('excelFile');
-            let file = fileInput.files[0];
-            if (!file) { alert("برجاء اختيار ملف إكسيل!"); return; }
-
-            let reader = new FileReader();
-            reader.onload = function(e) {
-                let data = new Uint8Array(e.target.result);
-                let workbook = XLSX.read(data, {type: 'array'});
-                studentsData = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]);
-                document.getElementById('uploadStatus').innerText = "✅ تم رفع " + studentsData.length + " طالب.";
-            };
-            reader.readAsArrayBuffer(file);
-        }
+        // جلب وقراءة ملف الإكسيل أوتوماتيكياً
+        window.onload = function() {
+            fetch('data.xlsx')
+                .then(response => {
+                    if (!response.ok) throw new Error('لم يتم العثور على ملف data.xlsx');
+                    return response.arrayBuffer();
+                })
+                .then(buffer => {
+                    let workbook = XLSX.read(buffer, { type: 'array' });
+                    let firstSheetName = workbook.SheetNames[0];
+                    let worksheet = workbook.Sheets[firstSheetName];
+                    studentsData = XLSX.utils.sheet_to_json(worksheet, { defval: "" });
+                    
+                    document.getElementById('statusMsg').innerText = "✅ النظام جاهز للاستعلام.";
+                    document.getElementById('statusMsg').style.color = "green";
+                })
+                .catch(error => {
+                    console.error(error);
+                    document.getElementById('statusMsg').innerText = "⚠️ يرجى التأكد من رفع ملف data.xlsx";
+                    document.getElementById('statusMsg').style.color = "red";
+                });
+        };
 
         function searchScore() {
             let codeInput = document.getElementById('studentCode').value.trim();
             let resultBox = document.getElementById('resultBox');
-            
-            // البحث عن الطالب (يفترض أن أول عمود هو الكود)
-            let student = studentsData.find(s => String(Object.values(s)[0]).trim() === codeInput);
+
+            if (!codeInput) {
+                alert("برجاء كتابة الكود أولاً!");
+                return;
+            }
+
+            if (studentsData.length === 0) {
+                alert("جاري تحميل ملف الدرجات، انتظر ثوانٍ أو تأكد من رفع data.xlsx");
+                return;
+            }
+
+            // البحث بأول عمود في الإكسيل
+            let student = studentsData.find(s => {
+                let firstVal = Object.values(s)[0];
+                return String(firstVal).trim() === codeInput;
+            });
 
             if (student) {
-                let html = "<h3>بيانات الطالب</h3>";
-                // حلقة تكرارية تعرض كل الأعمدة الموجودة في ملف الإكسيل
+                let html = "<h3 style='margin-top:0; color:#2c3e50;'>بيانات الطالب</h3>";
                 for (let key in student) {
                     html += `<div class="result-item"><b>${key}:</b> ${student[key]}</div>`;
                 }
                 resultBox.innerHTML = html;
                 resultBox.style.display = 'block';
             } else {
-                alert("لم يتم العثور على طالب!");
+                alert("لم يتم العثور على طالب بهذا الكود! تأكد من صحة الرقم.");
                 resultBox.style.display = 'none';
             }
         }
